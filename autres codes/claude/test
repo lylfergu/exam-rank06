@@ -3,3 +3,50 @@ gcc -Wall -Wextra -o mini_serv mini_serv.c
 
 # Dans d'autres terminaux :
 nc 127.0.0.1 4242
+
+Le jour de l'exam, je te conseille de :
+
+Refaire le code de mémoire une ou deux fois.
+Tester avec plusieurs terminaux :
+./mini_serv 8080
+
+puis :
+
+nc 127.0.0.1 8080
+
+dans 2 ou 3 fenêtres.
+
+Vérifie :
+
+client 0 arrive
+client 1 arrive
+
+puis :
+hello
+
+et :
+
+client 0: hello
+
+sur les autres clients.
+
+Si ça marche sur ces cas-là, tu es déjà très proche de la validation.
+
+Et surtout, teste les cas suivants :
+
+Client 0 arrive
+Client 1 arrive
+Client 0 envoie "hello\n"
+Client 1 reçoit "client 0: hello\n"
+Client 0 envoie :
+hello
+world
+
+Client 1 reçoit :
+client 0: hello
+client 0: world
+Client 0 ferme
+Client 1 reçoit :
+server: client 0 just left
+
+Si ces trois scénarios fonctionnent, tu couvres déjà l'essentiel du sujet.
