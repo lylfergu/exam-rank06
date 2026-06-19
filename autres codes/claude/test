@@ -1,0 +1,5 @@
+gcc -Wall -Wextra -o mini_serv mini_serv.c
+./mini_serv 4242
+
+# Dans d'autres terminaux :
+nc 127.0.0.1 4242
