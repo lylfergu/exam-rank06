@@ -20,6 +20,32 @@ void	fatal(void)
 	exit(1);
 }
 
+void	send_all(int except, char *msg)
+{
+	for (int fd = 0; fd <= maxfd; fd++)
+	{
+		if (ids[fd] != -1 && fd != except)
+			send(fd, msg, strlen(msg), 0);
+	}
+}
+
+char	*str_join(char *buf, char *add)
+{
+	char	*newbuf;
+	int		len = buf ? strlen(buf) : 0;
+
+	newbuf = malloc(len + strlen(add) + 1);
+	if (!newbuf)
+		return (0);
+	newbuf[0] = 0;
+	if (buf)
+		strcat(newbuf, buf);
+	strcat(newbuf, add);
+	free(buf);
+	return (newbuf);
+}
+
+
 int	extract_message(char **buf, char **msg)
 {
 	char	*newbuf;
@@ -46,30 +72,6 @@ int	extract_message(char **buf, char **msg)
 	return (0);
 }
 
-char	*str_join(char *buf, char *add)
-{
-	char	*newbuf;
-	int		len = buf ? strlen(buf) : 0;
-
-	newbuf = malloc(len + strlen(add) + 1);
-	if (!newbuf)
-		return (0);
-	newbuf[0] = 0;
-	if (buf)
-		strcat(newbuf, buf);
-	strcat(newbuf, add);
-	free(buf);
-	return (newbuf);
-}
-
-void	send_all(int except, char *msg)
-{
-	for (int fd = 0; fd <= maxfd; fd++)
-	{
-		if (ids[fd] != -1 && fd != except)
-			send(fd, msg, strlen(msg), 0);
-	}
-}
 
 int	main(int argc, char **argv)
 {
