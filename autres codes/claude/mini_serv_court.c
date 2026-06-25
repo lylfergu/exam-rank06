@@ -1,5 +1,3 @@
-//version apporuvee par claude et chat
-
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 int		maxfd, next_id;
 int		ids[65536];
@@ -37,7 +36,7 @@ char	*str_join(char *buf, char *add)
 	newbuf = malloc(len + strlen(add) + 1);
 	if (!newbuf)
 		return (0);
-	newbuf[0] = 0;
+	newbuf[0] = 0; //on transforme en chaine vide avant de remplir
 	if (buf)
 		strcat(newbuf, buf);
 	strcat(newbuf, add);
@@ -45,10 +44,18 @@ char	*str_join(char *buf, char *add)
 	return (newbuf);
 }
 
+//Cette fonction sert à extraire une ligne complète (terminée par \n) d'un buffer et à mettre à jour ce buffer pour ne garder que ce qui reste après cette ligne
+
+/*buf : pointeur sur le buffer contenant les données lues.
+msg : pointeur qui recevra la ligne extraite.
+Retour :
+1 : une ligne complète a été trouvée et extraite.
+0 : aucune ligne complète (\n) n'a été trouvée.
+-1 : erreur d'allocation mémoire.*/
 
 int	extract_message(char **buf, char **msg)
 {
-	char	*newbuf;
+	char	*newbuf; //ervira à stocker ce qu'il reste après le \n.
 	int		i = 0;
 
 	*msg = 0;
@@ -58,18 +65,18 @@ int	extract_message(char **buf, char **msg)
 	{
 		if ((*buf)[i] == '\n')
 		{
-			newbuf = calloc(1, strlen(*buf + i + 1) + 1);
+			newbuf = calloc(1, strlen(*buf + i + 1) + 1); //On calcule la longueur de la sous-chaîne à partir de cette position i, ex:bon/njour on calculera strlen de jour, car *buf point sur b, + i = +3 donc n + 1, on saute \n
 			if (!newbuf)
 				return (-1);
 			strcpy(newbuf, *buf + i + 1);
-			*msg = *buf;
-			(*msg)[i + 1] = 0;
-			*buf = newbuf;
-			return (1);
+			*msg = *buf; //on fait pointer msg vers ancien buffer "bon\njour"
+			(*msg)[i + 1] = 0; //on ajoute le caractere '\0' a la place du \n
+			*buf = newbuf; // devient jour
+			return (1); //on a trouve une ligne complete
 		}
 		i++;
 	}
-	return (0);
+	return (0); //boucle se termine sans entre dans if, donc pas de ligne complete 
 }
 
 
@@ -114,7 +121,8 @@ int	main(int argc, char **argv)
 		if (select(maxfd + 1, &readfds, 0, 0, 0) < 0)
 			continue;
 
-		for (fd = 0; fd <= maxfd; fd++)
+		int cur_maxfd = maxfd;
+		for (fd = 0; fd <= cur_maxfd; fd++)
 		{
 			if (!FD_ISSET(fd, &readfds))
 				continue;

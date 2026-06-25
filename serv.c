@@ -44,10 +44,28 @@ char *strjoin(char *buf, char *add)
     return (newbuf);
 }
 
-int extract_message(char **buf, char **msg)
+int extract_msg(char **buf, char **msg)
 {
     char *newbuf;
     int i = 0;
 
-    
+    *msg = 0;
+    if (!buf)
+        return (0);
+    while((*buf)[i])
+    {
+        if ((*buf)[i] == '\n')
+        {
+            newbuf = calloc(1, strlen(*buf + i + 1) + 1);
+            if (!newbuf)
+                return (-1);
+            strcpy(newbuf, *buf + i + 1);
+            *msg = *buf;
+            *(msg)[i + 1] = 0;
+            *buf = newbuf;
+            return (1);
+        }
+        i++;
+    }
+    return (0);
 }
