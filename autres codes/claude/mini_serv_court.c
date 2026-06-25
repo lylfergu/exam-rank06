@@ -82,11 +82,11 @@ int	extract_message(char **buf, char **msg)
 
 int	main(int argc, char **argv)
 {
-	int					sock, fd, n;
-	struct sockaddr_in	addr;
-	fd_set				readfds;
-	char				buf[1001];
-	char				msg[100000];
+	int					sock, fd, n; // socket serveur, fd courant (client ou serveur), nombres d octets lus
+	struct sockaddr_in	addr; // infos ip/port serveur
+	fd_set				readfds; //ensemble de fd a surveiller avec select
+	char				buf[1001]; //buffer de reception
+	char				msg[100000]; //buff pour construire msg a envoyer
 
 	if (argc != 2)
 	{
@@ -100,34 +100,34 @@ int	main(int argc, char **argv)
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(2130706433);
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");//convertit port en format reseau
 	addr.sin_port = htons(atoi(argv[1]));
 
-	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)//associe socket au port
 		fatal();
-	if (listen(sock, 128) < 0)
+	if (listen(sock, 128) < 0)//met en mode serveur
 		fatal();
 
-	for (int i = 0; i < 65536; i++)
+	for (int i = 0; i < 65536; i++) //tableau qui associe fd ->id client
 		ids[i] = -1;
 
-	FD_ZERO(&all);
+	FD_ZERO(&all); //all = ensemble des sockets surveilles
 	FD_SET(sock, &all);
 	maxfd = sock;
 
 	while (1)
 	{
 		readfds = all;
-		if (select(maxfd + 1, &readfds, 0, 0, 0) < 0)
+		if (select(maxfd + 1, &readfds, 0, 0, 0) < 0) //attend qu un socket soit pret a lire, bloque jusqu a event
 			continue;
 
 		int cur_maxfd = maxfd;
-		for (fd = 0; fd <= cur_maxfd; fd++)
+		for (fd = 0; fd <= cur_maxfd; fd++) //on verifie chaque fd possible
 		{
 			if (!FD_ISSET(fd, &readfds))
 				continue;
 
-			if (fd == sock)
+			if (fd == sock) //si nouveau client (le serv recoit connexion)
 			{
 				int client = accept(sock, 0, 0);
 				if (client < 0)
