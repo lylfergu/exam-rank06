@@ -28,57 +28,52 @@ void	send_all(int except, char *msg)
 	}
 }
 
-char	*str_join(char *buf, char *add)
+int extract_message(char **buf, char **msg)
 {
 	char	*newbuf;
-	int		len = buf ? strlen(buf) : 0;
-
-	newbuf = malloc(len + strlen(add) + 1);
-	if (!newbuf)
-		return (0);
-	newbuf[0] = 0; //on transforme en chaine vide avant de remplir
-	if (buf)
-		strcat(newbuf, buf);
-	strcat(newbuf, add);
-	free(buf);
-	return (newbuf);
-}
-
-//Cette fonction sert à extraire une ligne complète (terminée par \n) d'un buffer et à mettre à jour ce buffer pour ne garder que ce qui reste après cette ligne
-
-/*buf : pointeur sur le buffer contenant les données lues.
-msg : pointeur qui recevra la ligne extraite.
-Retour :
-1 : une ligne complète a été trouvée et extraite.
-0 : aucune ligne complète (\n) n'a été trouvée.
--1 : erreur d'allocation mémoire.*/
-
-int	extract_message(char **buf, char **msg)
-{
-	char	*newbuf; //ervira à stocker ce qu'il reste après le \n.
-	int		i = 0;
+	int	i;
 
 	*msg = 0;
-	if (!*buf)
+	if (*buf == 0)
 		return (0);
+	i = 0;
 	while ((*buf)[i])
 	{
 		if ((*buf)[i] == '\n')
 		{
-			newbuf = calloc(1, strlen(*buf + i + 1) + 1); //On calcule la longueur de la sous-chaîne à partir de cette position i, ex:bon/njour on calculera strlen de jour, car *buf point sur b, + i = +3 donc n + 1, on saute \n
-			if (!newbuf)
+			newbuf = calloc(1, sizeof(*newbuf) * (strlen(*buf + i + 1) + 1));
+			if (newbuf == 0)
 				return (-1);
 			strcpy(newbuf, *buf + i + 1);
-			*msg = *buf; //on fait pointer msg vers ancien buffer "bon\njour"
-			(*msg)[i + 1] = 0; //on ajoute le caractere '\0' a la place du \n
-			*buf = newbuf; // devient jour
-			return (1); //on a trouve une ligne complete
+			*msg = *buf;
+			(*msg)[i + 1] = 0;
+			*buf = newbuf;
+			return (1);
 		}
 		i++;
 	}
-	return (0); //boucle se termine sans entre dans if, donc pas de ligne complete 
+	return (0);
 }
 
+char *str_join(char *buf, char *add)
+{
+	char	*newbuf;
+	int		len;
+
+	if (buf == 0)
+		len = 0;
+	else
+		len = strlen(buf);
+	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
+	if (newbuf == 0)
+		return (0);
+	newbuf[0] = 0;
+	if (buf != 0)
+		strcat(newbuf, buf);
+	free(buf);
+	strcat(newbuf, add);
+	return (newbuf);
+}
 
 int	main(int argc, char **argv)
 {
@@ -140,9 +135,7 @@ int	main(int argc, char **argv)
 				bufs[client] = NULL;
 				FD_SET(client, &all);
 
-				sprintf(msg,
-					"server: client %d just arrived\n",
-					ids[client]);
+				sprintf(msg, "server: client %d just arrived\n", ids[client]);
 				send_all(client, msg);
 			}
 			else
@@ -151,9 +144,7 @@ int	main(int argc, char **argv)
 
 				if (n <= 0)
 				{
-					sprintf(msg,
-						"server: client %d just left\n",
-						ids[fd]);
+					sprintf(msg,"server: client %d just left\n", ids[fd]); 
 					send_all(fd, msg);
 
 					free(bufs[fd]);
